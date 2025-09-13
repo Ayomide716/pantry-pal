@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -23,7 +24,7 @@ export default function SuggestedRecipe() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const handleSuggestRecipe = async () => {
-    if (ingredients.length < 1) {
+    if (ingredients.length === 0) {
       toast({
         variant: 'destructive',
         title: 'No Ingredients',
@@ -51,7 +52,7 @@ export default function SuggestedRecipe() {
     }
   };
 
-  const hasEnoughIngredients = ingredients.length > 0;
+  const hasIngredients = ingredients.length > 0;
 
   const isCurrentRecipeFavorite = suggestedRecipe ? generatedFavorites.some(r => r.id === suggestedRecipe.id) : false;
 
@@ -68,7 +69,7 @@ export default function SuggestedRecipe() {
             <p className="text-sm text-muted-foreground mb-4">Let our AI chef invent a new recipe just for you based on your ingredients.</p>
           <Button
             onClick={handleSuggestRecipe}
-            disabled={isLoading || !isPantryLoaded || !hasEnoughIngredients}
+            disabled={isLoading || !isPantryLoaded}
             className="w-full"
           >
             {isLoading ? (
@@ -79,7 +80,7 @@ export default function SuggestedRecipe() {
             ) : (
               <>
                 <Sparkles className="mr-2 h-4 w-4" />
-                {hasEnoughIngredients ? "Suggest a Recipe" : "Add ingredients first"}
+                {hasIngredients ? "Suggest a Recipe" : "Add ingredients first"}
               </>
             )}
           </Button>
