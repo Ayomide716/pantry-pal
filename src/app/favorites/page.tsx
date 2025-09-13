@@ -1,12 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { recipes as allRecipes } from '@/lib/recipes';
 import { usePantry } from '@/hooks/use-pantry';
 import RecipeCard from '@/components/recipe-card';
 import type { Recipe } from '@/lib/types';
 import RecipeDetailsSheet from '@/components/recipe-details-sheet';
-import { BookHeart } from 'lucide-react';
+import { BookHeart, ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export default function FavoritesPage() {
   const { favorites, isPantryLoaded } = usePantry();
@@ -18,6 +20,12 @@ export default function FavoritesPage() {
     <>
       <div className="container mx-auto px-4 py-8">
         <div className="mb-12">
+            <Button variant="ghost" asChild className="mb-4">
+              <Link href="/">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Recipes
+              </Link>
+            </Button>
           <h1 className="font-headline text-4xl md:text-5xl font-bold text-foreground mb-2 tracking-tight">Your Favorite Recipes</h1>
           <p className="text-lg text-muted-foreground">A collection of your most-loved dishes, ready when you are.</p>
         </div>
