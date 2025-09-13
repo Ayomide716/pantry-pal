@@ -5,9 +5,6 @@ import { useState, useEffect, useCallback } from 'react';
 const INGREDIENTS_KEY = 'pantry-pal-ingredients';
 const FAVORITES_KEY = 'pantry-pal-favorites';
 
-// Custom event to sync tabs across different browser tabs/windows
-const storageEvent = 'pantry-storage';
-
 export const usePantry = () => {
   const [ingredients, setIngredients] = useState<string[]>([]);
   const [favorites, setFavorites] = useState<number[]>([]);
@@ -18,14 +15,12 @@ export const usePantry = () => {
       const storedIngredients = localStorage.getItem(INGREDIENTS_KEY);
       const storedFavorites = localStorage.getItem(FAVORITES_KEY);
 
-      if (storedIngredients) {
-        setIngredients(JSON.parse(storedIngredients));
-      }
-      if (storedFavorites) {
-        setFavorites(JSON.parse(storedFavorites));
-      }
+      setIngredients(storedIngredients ? JSON.parse(storedIngredients) : []);
+      setFavorites(storedFavorites ? JSON.parse(storedFavorites) : []);
     } catch (error) {
       console.error("Failed to parse from localStorage", error);
+      setIngredients([]);
+      setFavorites([]);
     }
     setIsLoaded(true);
   }, []);
@@ -38,59 +33,43 @@ export const usePantry = () => {
             loadFromStorage();
         }
     };
-    
-    const handleCustomStorageChange = () => {
-        loadFromStorage();
-    };
 
     window.addEventListener('storage', handleStorageChange);
-    window.addEventListener(storageEvent, handleCustomStorageChange);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener(storageEvent, handleCustomStorageChange);
     };
   }, [loadFromStorage]);
 
 
   const addIngredient = (ingredient: string) => {
-    setIngredients(prev => {
-      const lowerCaseIngredient = ingredient.toLowerCase();
-      if (prev.includes(lowerCaseIngredient)) {
-        return prev;
-      }
-      const newIngredients = [...prev, lowerCaseIngredient];
-      localStorage.setItem(INGREDIENTS_KEY, JSON.stringify(newIngredients));
-      window.dispatchEvent(new Event(storageEvent));
-      return newIngredients;
-    });
+    const lowerCaseIngredient = ingredient.toLowerCase();
+    if (ingredients.includes(lowerCaseIngredient)) {
+        return;
+    }
+    const newIngredients = [...ingredients, lowerCaseIngredient];
+    localStorage.setItem(INGREDIENTS_KEY, JSON.stringify(newIngredients));
+    setIngredients(newIngredients);
   };
 
   const removeIngredient = (ingredient: string) => {
-    setIngredients(prev => {
-      const newIngredients = prev.filter(i => i !== ingredient);
+      const newIngredients = ingredients.filter(i => i !== ingredient);
       localStorage.setItem(INGREDIENTS_KEY, JSON.stringify(newIngredients));
-      window.dispatchEvent(new Event(storageEvent));
-      return newIngredients;
-    });
+      setIngredients(newIngredients);
   };
 
   const clearIngredients = () => {
-    setIngredients([]);
     localStorage.removeItem(INGREDIENTS_KEY);
-    window.dispatchEvent(new Event(storageEvent));
+    setIngredients([]);
   };
 
   const toggleFavorite = (recipeId: number) => {
-    setFavorites(prev => {
-      const isFavorite = prev.includes(recipeId);
+      const isFavorite = favorites.includes(recipeId);
       const newFavorites = isFavorite
-        ? prev.filter(id => id !== recipeId)
-        : [...prev, recipeId];
+        ? favorites.filter(id => id !== recipeId)
+        : [...favorites, recipeId];
       localStorage.setItem(FAVORITES_KEY, JSON.stringify(newFavorites));
-      window.dispatchEvent(new Event(storageEvent));
-      return newFavorites;
-    });
+      setFavorites(newFavorites);
   };
 
   return {
