@@ -48,6 +48,7 @@ export async function suggestRecipe(
 
 const prompt = ai.definePrompt({
   name: 'suggestRecipePrompt',
+  model: 'gemini-pro',
   input: {schema: SuggestRecipeInputSchema},
   output: {schema: SuggestRecipeOutputSchema},
   prompt: `You are an expert chef who excels at creating new and exciting recipes from a limited set of ingredients. A user will provide you with ingredients they have, and you must invent a new, delicious recipe.

@@ -38,6 +38,7 @@ export async function standardizeIngredient(
 
 const prompt = ai.definePrompt({
   name: 'ingredientStandardizationPrompt',
+  model: 'gemini-pro',
   input: {
     schema: IngredientStandardizationInputSchema,
   },
