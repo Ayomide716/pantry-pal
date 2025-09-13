@@ -8,7 +8,7 @@ import { usePantry } from '@/hooks/use-pantry';
 import RecipeCard from '@/components/recipe-card';
 import type { Recipe } from '@/lib/types';
 import RecipeDetailsSheet from '@/components/recipe-details-sheet';
-import { BookHeart, ArrowLeft, Sparkles, ChefHat } from 'lucide-react';
+import { BookHeart, ArrowLeft, Sparkles, ChefHat, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
