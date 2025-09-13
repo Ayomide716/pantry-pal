@@ -15,8 +15,8 @@ let pantryState: PantryState = {
   favorites: [],
 };
 
-// Only run on the client
-if (typeof window !== 'undefined') {
+// This function will only be called on the client
+const loadInitialState = () => {
     try {
         const storedIngredients = localStorage.getItem(INGREDIENTS_KEY);
         const storedFavorites = localStorage.getItem(FAVORITES_KEY);
@@ -28,6 +28,7 @@ if (typeof window !== 'undefined') {
         console.error("Failed to load pantry from localStorage", e);
         pantryState = { ingredients: [], favorites: [] };
     }
+    emitChange();
 }
 
 
@@ -97,35 +98,23 @@ function toggleFavorite(recipeId: number) {
 export const usePantry = () => {
     const state = useSyncExternalStore(subscribe, getSnapshot, () => serverSnapshot);
     
-    // This is a bit of a hack to deal with initial client-side loading
-    // from localStorage. When the app first loads, serverSnapshot is used.
-    // After hydration, this makes sure the client has the real data.
+    // This effect runs once on the client after hydration to load the initial state
+    // from localStorage. This is the key to avoiding hydration errors.
+    useEffect(() => {
+        loadInitialState();
+    }, []);
+
     const isPantryLoaded = typeof window !== 'undefined';
 
     const handleStorageChange = useCallback((event: StorageEvent) => {
         if (event.key === INGREDIENTS_KEY || event.key === FAVORITES_KEY) {
-            try {
-                const storedIngredients = localStorage.getItem(INGREDIENTS_KEY);
-                const storedFavorites = localStorage.getItem(FAVORITES_KEY);
-                pantryState = {
-                    ingredients: storedIngredients ? JSON.parse(storedIngredients) : [],
-                    favorites: storedFavorites ? JSON.parse(storedFavorites) : [],
-                };
-                emitChange();
-            } catch (e) {
-                console.error("Failed to update pantry from localStorage", e);
-            }
+            loadInitialState();
         }
     }, []);
 
     useEffect(() => {
         window.addEventListener('storage', handleStorageChange);
         
-        // On mount, ensure the state is synced with the latest from localStorage
-        // which might have been updated in another tab.
-        handleStorageChange({ key: INGREDIENTS_KEY } as StorageEvent);
-        handleStorageChange({ key: FAVORITES_KEY } as StorageEvent);
-
         return () => {
             window.removeEventListener('storage', handleStorageChange);
         }
