@@ -52,7 +52,7 @@ export async function generateMealPlan(
 
 const prompt = ai.definePrompt({
   name: 'generateMealPlanPrompt',
-  model: 'gemini-1.5-flash-latest',
+  model: 'googleai/gemini-1.5-flash-latest',
   input: {schema: GenerateMealPlanInputSchema},
   output: {schema: GenerateMealPlanOutputSchema},
   prompt: `You are a master chef and meal planning assistant. Your task is to generate a complete 7-day meal plan based on the ingredients a user has available and their stated dietary preferences.

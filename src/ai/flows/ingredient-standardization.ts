@@ -1,5 +1,3 @@
-// Ingredient standardization flow to standardize ingredient names.
-
 'use server';
 
 /**
@@ -38,7 +36,7 @@ export async function standardizeIngredient(
 
 const prompt = ai.definePrompt({
   name: 'ingredientStandardizationPrompt',
-  model: 'gemini-1.5-flash-latest',
+  model: 'googleai/gemini-1.5-flash-latest',
   input: {
     schema: IngredientStandardizationInputSchema,
   },
