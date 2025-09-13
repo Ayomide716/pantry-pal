@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { Lightbulb, Sparkles, Loader2, List, BookOpenCheck, Clock, Heart } from 'lucide-react';
-import { suggestRecipe, type SuggestRecipeOutput } from '@/ai/flows/suggest-recipe';
+import { suggestRecipe } from '@/ai/flows/suggest-recipe';
 import { usePantry } from '@/hooks/use-pantry';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from './ui/button';
@@ -52,8 +52,6 @@ export default function SuggestedRecipe() {
     }
   };
 
-  const hasIngredients = ingredients.length > 0;
-
   const isCurrentRecipeFavorite = suggestedRecipe ? generatedFavorites.some(r => r.id === suggestedRecipe.id) : false;
 
   return (
@@ -80,7 +78,7 @@ export default function SuggestedRecipe() {
             ) : (
               <>
                 <Sparkles className="mr-2 h-4 w-4" />
-                {hasIngredients ? "Suggest a Recipe" : "Add ingredients first"}
+                Suggest a Recipe
               </>
             )}
           </Button>
