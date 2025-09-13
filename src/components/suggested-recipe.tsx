@@ -21,11 +21,11 @@ export default function SuggestedRecipe() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const handleSuggestRecipe = async () => {
-    if (ingredients.length < 2) {
+    if (ingredients.length < 1) {
       toast({
         variant: 'destructive',
-        title: 'Not Enough Ingredients',
-        description: 'Please add at least two ingredients to get a recipe suggestion.',
+        title: 'No Ingredients',
+        description: 'Please add at least one ingredient to get a recipe suggestion.',
       });
       return;
     }
@@ -48,6 +48,8 @@ export default function SuggestedRecipe() {
     }
   };
 
+  const hasEnoughIngredients = ingredients.length > 0;
+
   return (
     <>
       <Card>
@@ -61,18 +63,18 @@ export default function SuggestedRecipe() {
             <p className="text-sm text-muted-foreground mb-4">Let our AI chef invent a new recipe just for you based on your ingredients.</p>
           <Button
             onClick={handleSuggestRecipe}
-            disabled={isLoading || !isPantryLoaded || ingredients.length < 2}
+            disabled={isLoading || !isPantryLoaded || !hasEnoughIngredients}
             className="w-full"
           >
             {isLoading ? (
               <>
-                <Loader2 className="animate-spin" />
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Thinking...
               </>
             ) : (
               <>
-                <Sparkles />
-                Suggest a Recipe
+                <Sparkles className="mr-2 h-4 w-4" />
+                {hasEnoughIngredients ? "Suggest a Recipe" : "Add ingredients first"}
               </>
             )}
           </Button>
