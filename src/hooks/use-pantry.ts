@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore, useCallback } from 'react';
+import { useSyncExternalStore, useCallback, useEffect } from 'react';
 
 const INGREDIENTS_KEY = 'pantry-pal-ingredients';
 const FAVORITES_KEY = 'pantry-pal-favorites';
@@ -103,21 +103,28 @@ export const usePantry = () => {
     const isPantryLoaded = typeof window !== 'undefined';
 
     const handleStorageChange = useCallback((event: StorageEvent) => {
-        if (event.key === INGREDIENTS_KEY) {
-            const newIngredients = event.newValue ? JSON.parse(event.newValue) : [];
-            pantryState = { ...pantryState, ingredients: newIngredients };
-            emitChange();
-        }
-        if (event.key === FAVORITES_KEY) {
-            const newFavorites = event.newValue ? JSON.parse(event.newValue) : [];
-            pantryState = { ...pantryState, favorites: newFavorites };
-            emitChange();
+        if (event.key === INGREDIENTS_KEY || event.key === FAVORITES_KEY) {
+            try {
+                const storedIngredients = localStorage.getItem(INGREDIENTS_KEY);
+                const storedFavorites = localStorage.getItem(FAVORITES_KEY);
+                pantryState = {
+                    ingredients: storedIngredients ? JSON.parse(storedIngredients) : [],
+                    favorites: storedFavorites ? JSON.parse(storedFavorites) : [],
+                };
+                emitChange();
+            } catch (e) {
+                console.error("Failed to update pantry from localStorage", e);
+            }
         }
     }, []);
 
-    if (typeof window !== 'undefined') {
+    useEffect(() => {
         window.addEventListener('storage', handleStorageChange);
-    }
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+        }
+    }, [handleStorageChange]);
+
 
   return {
     ingredients: state.ingredients,
