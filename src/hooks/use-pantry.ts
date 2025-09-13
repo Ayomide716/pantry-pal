@@ -5,10 +5,8 @@ import { useState, useEffect, useCallback } from 'react';
 const INGREDIENTS_KEY = 'pantry-pal-ingredients';
 const FAVORITES_KEY = 'pantry-pal-favorites';
 
-// Custom event to sync tabs
-const dispatchStorageEvent = () => {
-  window.dispatchEvent(new Event('storage'));
-};
+// Custom event to sync tabs across different browser tabs/windows
+const storageEvent = 'pantry-storage';
 
 export const usePantry = () => {
   const [ingredients, setIngredients] = useState<string[]>([]);
@@ -34,9 +32,23 @@ export const usePantry = () => {
 
   useEffect(() => {
     loadFromStorage();
-    window.addEventListener('storage', loadFromStorage);
+    
+    const handleStorageChange = (event: StorageEvent) => {
+        if (event.key === INGREDIENTS_KEY || event.key === FAVORITES_KEY) {
+            loadFromStorage();
+        }
+    };
+    
+    const handleCustomStorageChange = () => {
+        loadFromStorage();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener(storageEvent, handleCustomStorageChange);
+
     return () => {
-      window.removeEventListener('storage', loadFromStorage);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener(storageEvent, handleCustomStorageChange);
     };
   }, [loadFromStorage]);
 
@@ -49,7 +61,7 @@ export const usePantry = () => {
       }
       const newIngredients = [...prev, lowerCaseIngredient];
       localStorage.setItem(INGREDIENTS_KEY, JSON.stringify(newIngredients));
-      dispatchStorageEvent();
+      window.dispatchEvent(new Event(storageEvent));
       return newIngredients;
     });
   };
@@ -58,7 +70,7 @@ export const usePantry = () => {
     setIngredients(prev => {
       const newIngredients = prev.filter(i => i !== ingredient);
       localStorage.setItem(INGREDIENTS_KEY, JSON.stringify(newIngredients));
-      dispatchStorageEvent();
+      window.dispatchEvent(new Event(storageEvent));
       return newIngredients;
     });
   };
@@ -66,7 +78,7 @@ export const usePantry = () => {
   const clearIngredients = () => {
     setIngredients([]);
     localStorage.removeItem(INGREDIENTS_KEY);
-    dispatchStorageEvent();
+    window.dispatchEvent(new Event(storageEvent));
   };
 
   const toggleFavorite = (recipeId: number) => {
@@ -76,7 +88,7 @@ export const usePantry = () => {
         ? prev.filter(id => id !== recipeId)
         : [...prev, recipeId];
       localStorage.setItem(FAVORITES_KEY, JSON.stringify(newFavorites));
-      dispatchStorageEvent();
+      window.dispatchEvent(new Event(storageEvent));
       return newFavorites;
     });
   };
