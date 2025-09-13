@@ -1,3 +1,28 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "101",
+      "description": "A close-up shot of a fork twirling spaghetti carbonara from a white bowl.",
+      "imageUrl": "https://picsum.photos/seed/101/600/400",
+      "imageHint": "spaghetti carbonara"
+    },
+    {
+      "id": "102",
+      "description": "A vibrant chicken stir-fry with broccoli and bell peppers in a sizzling wok.",
+      "imageUrl": "https://picsum.photos/seed/102/600/400",
+      "imageHint": "chicken stirfry"
+    },
+    {
+      "id": "103",
+      "description": "A classic Caprese salad with layers of fresh tomato, mozzarella, and basil, drizzled with balsamic glaze.",
+      "imageUrl": "https://picsum.photos/seed/103/600/400",
+      "imageHint": "caprese salad"
+    },
+    {
+      "id": "104",
+      "description": "A comforting bowl of hearty lentil soup, garnished with fresh parsley.",
+      "imageUrl": "https://picsum.photos/seed/104/600/400",
+      "imageHint": "lentil soup"
+    }
+  ]
 }
