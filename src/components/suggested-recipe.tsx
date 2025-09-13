@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Lightbulb, Sparkles, Loader2, List, BookOpenCheck, Clock, Heart } from 'lucide-react';
 import { suggestRecipe, type SuggestRecipeOutput } from '@/ai/flows/suggest-recipe';
 import { usePantry } from '@/hooks/use-pantry';
@@ -89,13 +90,24 @@ export default function SuggestedRecipe() {
         <Dialog open={isSheetOpen} onOpenChange={setIsSheetOpen}>
           <DialogContent className="p-0 max-w-2xl">
             <ScrollArea className="max-h-[90vh]">
-              <DialogHeader className="p-6 pb-4">
+            {suggestedRecipe.image && (
+                <div className="relative h-64 w-full">
+                    <Image
+                        src={suggestedRecipe.image}
+                        alt={suggestedRecipe.title}
+                        data-ai-hint="ai generated food"
+                        fill
+                        className="object-cover"
+                    />
+                </div>
+            )}
+              <DialogHeader className="p-6 pb-4 text-center">
                  <Badge variant="secondary" className="w-fit self-center flex items-center gap-2 mb-2">
                     <Clock className="h-4 w-4" />
                     <span>{suggestedRecipe.prepTime}</span>
                 </Badge>
-                <DialogTitle className="text-3xl font-headline text-center">{suggestedRecipe.title}</DialogTitle>
-                <DialogDescription className="text-center mt-2">{suggestedRecipe.description}</DialogDescription>
+                <DialogTitle className="text-3xl font-headline">{suggestedRecipe.title}</DialogTitle>
+                <DialogDescription className="mt-2">{suggestedRecipe.description}</DialogDescription>
               </DialogHeader>
               <div className="p-6 pt-0 space-y-6">
                 <div className="space-y-2">

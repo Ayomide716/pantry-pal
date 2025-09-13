@@ -13,3 +13,6 @@ export type Recipe = {
   image: string;
   imageHint: string;
 };
+
+// This is now defined in use-pantry.ts to avoid circular dependencies
+// export type GeneratedRecipe = import('@/ai/flows/suggest-recipe').SuggestRecipeOutput & { id: number };

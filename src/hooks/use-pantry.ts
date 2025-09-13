@@ -15,145 +15,95 @@ type PantryState = {
   generatedFavorites: GeneratedRecipe[];
 };
 
-let pantryState: PantryState = {
-  ingredients: [],
-  favorites: [],
-  generatedFavorites: [],
-};
-
-const listeners = new Set<() => void>();
-
-function emitChange() {
-  for (const listener of listeners) {
-    listener();
-  }
-}
-
-const loadInitialState = () => {
-    if (typeof window === 'undefined') {
-        return;
-    }
-    try {
-        const storedIngredients = localStorage.getItem(INGREDIENTS_KEY);
-        const storedFavorites = localStorage.getItem(FAVORITES_KEY);
-        const storedGeneratedFavorites = localStorage.getItem(GENERATED_FAVORITES_KEY);
-
-        const newState: PantryState = {
-            ingredients: storedIngredients ? JSON.parse(storedIngredients) : [],
-            favorites: storedFavorites ? JSON.parse(storedFavorites) : [],
-            generatedFavorites: storedGeneratedFavorites ? JSON.parse(storedGeneratedFavorites) : [],
-        };
-        // Only update and emit if the state has actually changed
-        if (JSON.stringify(newState) !== JSON.stringify(pantryState)) {
-          pantryState = newState;
-          emitChange();
-        }
-    } catch (e) {
-        console.error("Failed to load pantry from localStorage", e);
-        pantryState = { ingredients: [], favorites: [], generatedFavorites: [] };
-        emitChange();
-    }
-};
-
-
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
-
-// --- Store Actions ---
-
-function addIngredient(ingredient: string) {
-  const lowerCaseIngredient = ingredient.toLowerCase();
-  if (pantryState.ingredients.includes(lowerCaseIngredient)) {
-    return;
-  }
-  pantryState = {
-    ...pantryState,
-    ingredients: [...pantryState.ingredients, lowerCaseIngredient],
-  };
-  localStorage.setItem(INGREDIENTS_KEY, JSON.stringify(pantryState.ingredients));
-  emitChange();
-}
-
-function removeIngredient(ingredient: string) {
-  pantryState = {
-    ...pantryState,
-    ingredients: pantryState.ingredients.filter(i => i !== ingredient),
-  };
-  localStorage.setItem(INGREDIENTS_KEY, JSON.stringify(pantryState.ingredients));
-  emitChange();
-}
-
-function clearIngredients() {
-  pantryState = { ...pantryState, ingredients: [] };
-  localStorage.removeItem(INGREDIENTS_KEY);
-  emitChange();
-}
-
-function toggleFavorite(recipeId: number) {
-  const isFavorite = pantryState.favorites.includes(recipeId);
-  const newFavorites = isFavorite
-    ? pantryState.favorites.filter(id => id !== recipeId)
-    : [...pantryState.favorites, recipeId];
-
-  pantryState = { ...pantryState, favorites: newFavorites };
-  localStorage.setItem(FAVORITES_KEY, JSON.stringify(pantryState.favorites));
-  emitChange();
-}
-
-function toggleGeneratedFavorite(recipe: GeneratedRecipe) {
-    const isFavorite = pantryState.generatedFavorites.some(r => r.id === recipe.id);
-    const newFavorites = isFavorite
-        ? pantryState.generatedFavorites.filter(r => r.id !== recipe.id)
-        : [...pantryState.generatedFavorites, recipe];
-
-    pantryState = { ...pantryState, generatedFavorites: newFavorites };
-    localStorage.setItem(GENERATED_FAVORITES_KEY, JSON.stringify(pantryState.generatedFavorites));
-    emitChange();
-}
-
-
-// --- Hook ---
-
 export const usePantry = () => {
-  const [state, setState] = useState(pantryState);
+  const [pantryState, setPantryState] = useState<PantryState>({
+    ingredients: [],
+    favorites: [],
+    generatedFavorites: [],
+  });
   const [isPantryLoaded, setIsPantryLoaded] = useState(false);
 
   useEffect(() => {
-    // This effect runs once on the client after hydration
-    loadInitialState();
-    setState(pantryState);
-    setIsPantryLoaded(true);
+    try {
+      const storedIngredients = localStorage.getItem(INGREDIENTS_KEY);
+      const storedFavorites = localStorage.getItem(FAVORITES_KEY);
+      const storedGeneratedFavorites = localStorage.getItem(GENERATED_FAVORITES_KEY);
 
-    const handleStorageChange = (event: StorageEvent) => {
-        if (event.key === INGREDIENTS_KEY || event.key === FAVORITES_KEY || event.key === GENERATED_FAVORITES_KEY) {
-            loadInitialState();
-        }
-    };
-    
-    // Subscribe to our internal state changes
-    const unsubscribe = subscribe(() => {
-      setState(pantryState);
-    });
-
-    // Subscribe to cross-tab storage changes
-    window.addEventListener('storage', handleStorageChange);
-    
-    return () => {
-      unsubscribe();
-      window.removeEventListener('storage', handleStorageChange);
+      setPantryState({
+        ingredients: storedIngredients ? JSON.parse(storedIngredients) : [],
+        favorites: storedFavorites ? JSON.parse(storedFavorites) : [],
+        generatedFavorites: storedGeneratedFavorites ? JSON.parse(storedGeneratedFavorites) : [],
+      });
+    } catch (error) {
+      console.error("Failed to load pantry from localStorage", error);
+    } finally {
+      setIsPantryLoaded(true);
     }
   }, []);
 
+  const updateState = (newState: Partial<PantryState>) => {
+    setPantryState(prevState => {
+      const updatedState = { ...prevState, ...newState };
+      try {
+        if (newState.ingredients) {
+          localStorage.setItem(INGREDIENTS_KEY, JSON.stringify(updatedState.ingredients));
+        }
+        if (newState.favorites) {
+          localStorage.setItem(FAVORITES_KEY, JSON.stringify(updatedState.favorites));
+        }
+        if (newState.generatedFavorites) {
+          localStorage.setItem(GENERATED_FAVORITES_KEY, JSON.stringify(updatedState.generatedFavorites));
+        }
+      } catch (error) {
+        console.error("Failed to save pantry to localStorage", error);
+      }
+      return updatedState;
+    });
+  };
+
+  const addIngredient = useCallback((ingredient: string) => {
+    const lowerCaseIngredient = ingredient.toLowerCase();
+    setPantryState(prevState => {
+      if (prevState.ingredients.includes(lowerCaseIngredient)) {
+        return prevState;
+      }
+      const newIngredients = [...prevState.ingredients, lowerCaseIngredient];
+      updateState({ ingredients: newIngredients });
+      return { ...prevState, ingredients: newIngredients };
+    });
+  }, []);
+
+  const removeIngredient = useCallback((ingredient: string) => {
+    const newIngredients = pantryState.ingredients.filter(i => i !== ingredient);
+    updateState({ ingredients: newIngredients });
+  }, [pantryState.ingredients]);
+
+  const clearIngredients = useCallback(() => {
+    updateState({ ingredients: [] });
+  }, []);
+
+  const toggleFavorite = useCallback((recipeId: number) => {
+    const isFavorite = pantryState.favorites.includes(recipeId);
+    const newFavorites = isFavorite
+      ? pantryState.favorites.filter(id => id !== recipeId)
+      : [...pantryState.favorites, recipeId];
+    updateState({ favorites: newFavorites });
+  }, [pantryState.favorites]);
+
+  const toggleGeneratedFavorite = useCallback((recipe: GeneratedRecipe) => {
+    const isFavorite = pantryState.generatedFavorites.some(r => r.id === recipe.id);
+    const newFavorites = isFavorite
+      ? pantryState.generatedFavorites.filter(r => r.id !== recipe.id)
+      : [...pantryState.generatedFavorites, recipe];
+    updateState({ generatedFavorites: newFavorites });
+  }, [pantryState.generatedFavorites]);
+
   return {
-    ingredients: state.ingredients,
+    ...pantryState,
     addIngredient,
     removeIngredient,
     clearIngredients,
-    favorites: state.favorites,
     toggleFavorite,
-    generatedFavorites: state.generatedFavorites,
     toggleGeneratedFavorite,
     isPantryLoaded,
   };

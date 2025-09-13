@@ -66,9 +66,9 @@ export default function FavoritesPage() {
                 <Card key={recipe.id} className="flex flex-col h-full overflow-hidden transition-all hover:shadow-lg">
                   <CardHeader className="p-0 relative">
                     <Image
-                      src="https://picsum.photos/seed/ai/600/400"
+                      src={recipe.image}
                       alt={recipe.title}
-                      data-ai-hint="abstract food"
+                      data-ai-hint="ai generated food"
                       width={600}
                       height={400}
                       className="object-cover w-full h-48 cursor-pointer"

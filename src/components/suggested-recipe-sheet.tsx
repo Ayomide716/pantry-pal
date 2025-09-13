@@ -2,6 +2,7 @@
 'use client';
 
 import { Heart, Clock, List, BookOpenCheck } from 'lucide-react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -38,13 +39,28 @@ export default function SuggestedRecipeSheet({
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-lg p-0">
         <ScrollArea className="h-full">
-          <SheetHeader className="p-6 pb-0">
-             <Badge variant="secondary" className="w-fit flex items-center gap-2 mb-2">
-                <Clock className="h-4 w-4" />
-                <span>{recipe.prepTime}</span>
-            </Badge>
-            <SheetTitle className="text-3xl font-headline">{recipe.title}</SheetTitle>
-            <SheetDescription className="mt-2">{recipe.description}</SheetDescription>
+          <SheetHeader className="p-6 pb-0 relative">
+            {recipe.image && (
+                 <div className="relative h-64 w-full -mx-6 -mt-6">
+                    <Image
+                        src={recipe.image}
+                        alt={recipe.title}
+                        data-ai-hint="ai generated food"
+                        fill
+                        className="object-cover"
+                    />
+                 </div>
+            )}
+            <div className="pt-6">
+                <SheetTitle className="text-3xl font-headline">{recipe.title}</SheetTitle>
+                <SheetDescription className="mt-2">{recipe.description}</SheetDescription>
+            </div>
+             <div className="flex justify-between items-center pt-4">
+                 <Badge variant="secondary" className="flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    <span>{recipe.prepTime}</span>
+                </Badge>
+            </div>
           </SheetHeader>
           <div className="p-6 space-y-6">
             <div className="space-y-2">

@@ -1,7 +1,7 @@
 'use server';
 
 /**
- * @fileOverview Suggests a new recipe based on available ingredients.
+ * @fileOverview Suggests a new recipe based on available ingredients, including a generated image.
  *
  * - suggestRecipe - A function that suggests the recipe.
  * - SuggestRecipeInput - The input type for the suggestRecipe function.
@@ -10,6 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { generateRecipeImage } from './generate-recipe-image';
 
 const SuggestRecipeInputSchema = z.object({
   ingredients: z
@@ -35,6 +36,7 @@ const SuggestRecipeOutputSchema = z.object({
   instructions: z
     .array(z.string())
     .describe('A list of step-by-step instructions for preparing the dish.'),
+  image: z.string().describe('A data URI of a generated image for the recipe.'),
 });
 export type SuggestRecipeOutput = z.infer<typeof SuggestRecipeOutputSchema>;
 
@@ -44,11 +46,11 @@ export async function suggestRecipe(
   return suggestRecipeFlow(input);
 }
 
-const prompt = ai.definePrompt({
+const recipePrompt = ai.definePrompt({
   name: 'suggestRecipePrompt',
   model: 'googleai/gemini-1.5-flash-latest',
   input: {schema: SuggestRecipeInputSchema},
-  output: {schema: SuggestRecipeOutputSchema},
+  output: {schema: SuggestRecipeOutputSchema.omit({ image: true })},
   prompt: `You are an expert chef who excels at creating new and exciting recipes from a limited set of ingredients. A user will provide you with ingredients they have, and you must invent a new, delicious recipe.
 
 Your response MUST be a valid JSON object that conforms to the output schema.
@@ -71,7 +73,18 @@ const suggestRecipeFlow = ai.defineFlow(
     outputSchema: SuggestRecipeOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    const {output: recipeDetails} = await recipePrompt(input);
+    if (!recipeDetails) {
+        throw new Error('Failed to generate recipe details.');
+    }
+
+    const imageResult = await generateRecipeImage({
+      recipeTitle: `A photorealistic image of ${recipeDetails.title}, presented beautifully on a plate.`
+    });
+
+    return {
+        ...recipeDetails,
+        image: imageResult.imageUrl,
+    };
   }
 );
