@@ -11,6 +11,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { generateRecipeImage } from './generate-recipe-image';
+import { recipes as standardRecipes } from '@/lib/recipes';
 
 const SuggestRecipeInputSchema = z.object({
   ingredients: z
@@ -46,6 +47,8 @@ export async function suggestRecipe(
   return suggestRecipeFlow(input);
 }
 
+const knownRecipeTitles = standardRecipes.map(r => r.title).join(', ');
+
 const recipePrompt = ai.definePrompt({
   name: 'suggestRecipePrompt',
   model: 'googleai/gemini-1.5-flash-latest',
@@ -57,7 +60,7 @@ Your response MUST be a valid JSON object that conforms to the output schema.
 
 - The recipe should primarily use the ingredients provided by the user.
 - You can assume the user has common pantry staples like oil, salt, pepper, and basic spices. You can include these in the ingredient list.
-- The recipe should not be one of the following, as the user already knows them: Spaghetti Carbonara, Chicken Stir-Fry, Caprese Salad, Hearty Lentil Soup.
+- To ensure the suggestion is unique, the recipe should NOT be one of the following standard dishes: ${knownRecipeTitles}.
 - Make the recipe sound appealing and the instructions clear and easy to follow.
 
 User's Available Ingredients: {{{ingredients}}}
