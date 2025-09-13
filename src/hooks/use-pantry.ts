@@ -120,6 +120,12 @@ export const usePantry = () => {
 
     useEffect(() => {
         window.addEventListener('storage', handleStorageChange);
+        
+        // On mount, ensure the state is synced with the latest from localStorage
+        // which might have been updated in another tab.
+        handleStorageChange({ key: INGREDIENTS_KEY } as StorageEvent);
+        handleStorageChange({ key: FAVORITES_KEY } as StorageEvent);
+
         return () => {
             window.removeEventListener('storage', handleStorageChange);
         }
