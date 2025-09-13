@@ -1,23 +1,24 @@
 'use client';
 
 import { useState } from 'react';
-import { Lightbulb, Sparkles, Loader2, List, BookOpenCheck, Clock } from 'lucide-react';
+import { Lightbulb, Sparkles, Loader2, List, BookOpenCheck, Clock, Heart } from 'lucide-react';
 import { suggestRecipe, type SuggestRecipeOutput } from '@/ai/flows/suggest-recipe';
 import { usePantry } from '@/hooks/use-pantry';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from './ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from './ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { ScrollArea } from './ui/scroll-area';
 import { Badge } from './ui/badge';
 import { cn } from '@/lib/utils';
+import type { GeneratedRecipe } from '@/hooks/use-pantry';
 
 
 export default function SuggestedRecipe() {
-  const { ingredients, isPantryLoaded } = usePantry();
+  const { ingredients, isPantryLoaded, generatedFavorites, toggleGeneratedFavorite } = usePantry();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [suggestedRecipe, setSuggestedRecipe] = useState<SuggestRecipeOutput | null>(null);
+  const [suggestedRecipe, setSuggestedRecipe] = useState<GeneratedRecipe | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const handleSuggestRecipe = async () => {
@@ -34,7 +35,8 @@ export default function SuggestedRecipe() {
     setSuggestedRecipe(null);
     try {
       const result = await suggestRecipe({ ingredients: ingredients.join(', ') });
-      setSuggestedRecipe(result);
+      const recipeWithId = { ...result, id: new Date().getTime() };
+      setSuggestedRecipe(recipeWithId);
       setIsSheetOpen(true);
     } catch (error) {
       console.error(error);
@@ -49,6 +51,8 @@ export default function SuggestedRecipe() {
   };
 
   const hasEnoughIngredients = ingredients.length > 0;
+
+  const isCurrentRecipeFavorite = suggestedRecipe ? generatedFavorites.some(r => r.id === suggestedRecipe.id) : false;
 
   return (
     <>
@@ -120,6 +124,16 @@ export default function SuggestedRecipe() {
                   </ol>
                 </div>
               </div>
+              <DialogFooter className="p-6 pt-4 bg-background/80 sticky bottom-0">
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => suggestedRecipe && toggleGeneratedFavorite(suggestedRecipe)}
+                  >
+                    <Heart className={cn('mr-2 h-4 w-4', isCurrentRecipeFavorite && 'fill-primary text-primary')} />
+                    {isCurrentRecipeFavorite ? 'Saved to Favorites' : 'Save to Favorites'}
+                  </Button>
+              </DialogFooter>
             </ScrollArea>
           </DialogContent>
         </Dialog>

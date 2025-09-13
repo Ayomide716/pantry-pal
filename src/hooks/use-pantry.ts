@@ -1,18 +1,24 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
+import type { SuggestRecipeOutput } from '@/ai/flows/suggest-recipe';
 
 const INGREDIENTS_KEY = 'pantry-pal-ingredients';
 const FAVORITES_KEY = 'pantry-pal-favorites';
+const GENERATED_FAVORITES_KEY = 'pantry-pal-generated-favorites';
+
+export type GeneratedRecipe = SuggestRecipeOutput & { id: number };
 
 type PantryState = {
   ingredients: string[];
   favorites: number[];
+  generatedFavorites: GeneratedRecipe[];
 };
 
 let pantryState: PantryState = {
   ingredients: [],
   favorites: [],
+  generatedFavorites: [],
 };
 
 const listeners = new Set<() => void>();
@@ -30,9 +36,12 @@ const loadInitialState = () => {
     try {
         const storedIngredients = localStorage.getItem(INGREDIENTS_KEY);
         const storedFavorites = localStorage.getItem(FAVORITES_KEY);
+        const storedGeneratedFavorites = localStorage.getItem(GENERATED_FAVORITES_KEY);
+
         const newState: PantryState = {
             ingredients: storedIngredients ? JSON.parse(storedIngredients) : [],
             favorites: storedFavorites ? JSON.parse(storedFavorites) : [],
+            generatedFavorites: storedGeneratedFavorites ? JSON.parse(storedGeneratedFavorites) : [],
         };
         // Only update and emit if the state has actually changed
         if (JSON.stringify(newState) !== JSON.stringify(pantryState)) {
@@ -41,7 +50,7 @@ const loadInitialState = () => {
         }
     } catch (e) {
         console.error("Failed to load pantry from localStorage", e);
-        pantryState = { ingredients: [], favorites: [] };
+        pantryState = { ingredients: [], favorites: [], generatedFavorites: [] };
         emitChange();
     }
 };
@@ -93,6 +102,18 @@ function toggleFavorite(recipeId: number) {
   emitChange();
 }
 
+function toggleGeneratedFavorite(recipe: GeneratedRecipe) {
+    const isFavorite = pantryState.generatedFavorites.some(r => r.id === recipe.id);
+    const newFavorites = isFavorite
+        ? pantryState.generatedFavorites.filter(r => r.id !== recipe.id)
+        : [...pantryState.generatedFavorites, recipe];
+
+    pantryState = { ...pantryState, generatedFavorites: newFavorites };
+    localStorage.setItem(GENERATED_FAVORITES_KEY, JSON.stringify(pantryState.generatedFavorites));
+    emitChange();
+}
+
+
 // --- Hook ---
 
 export const usePantry = () => {
@@ -106,7 +127,7 @@ export const usePantry = () => {
     setIsPantryLoaded(true);
 
     const handleStorageChange = (event: StorageEvent) => {
-        if (event.key === INGREDIENTS_KEY || event.key === FAVORITES_KEY) {
+        if (event.key === INGREDIENTS_KEY || event.key === FAVORITES_KEY || event.key === GENERATED_FAVORITES_KEY) {
             loadInitialState();
         }
     };
@@ -132,6 +153,8 @@ export const usePantry = () => {
     clearIngredients,
     favorites: state.favorites,
     toggleFavorite,
+    generatedFavorites: state.generatedFavorites,
+    toggleGeneratedFavorite,
     isPantryLoaded,
   };
 };
