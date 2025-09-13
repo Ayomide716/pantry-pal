@@ -36,7 +36,7 @@ const SuggestRecipeOutputSchema = z.object({
   instructions: z
     .array(z.string())
     .describe('A list of step-by-step instructions for preparing the dish.'),
-  image: z.string().describe('A data URI of a generated image for the recipe.'),
+  image: z.string().describe('A data URI of a generated image for the recipe.').optional(),
 });
 export type SuggestRecipeOutput = z.infer<typeof SuggestRecipeOutputSchema>;
 
@@ -78,13 +78,21 @@ const suggestRecipeFlow = ai.defineFlow(
         throw new Error('Failed to generate recipe details.');
     }
 
-    const imageResult = await generateRecipeImage({
-      recipeTitle: `A photorealistic image of ${recipeDetails.title}, presented beautifully on a plate.`
-    });
+    try {
+        const imageResult = await generateRecipeImage({
+          recipeTitle: `A photorealistic image of ${recipeDetails.title}, presented beautifully on a plate.`
+        });
 
-    return {
-        ...recipeDetails,
-        image: imageResult.imageUrl,
-    };
+        return {
+            ...recipeDetails,
+            image: imageResult.imageUrl,
+        };
+    } catch (error) {
+        console.error("Image generation failed, returning recipe without image.", error);
+        return {
+            ...recipeDetails,
+            image: undefined,
+        }
+    }
   }
 );
