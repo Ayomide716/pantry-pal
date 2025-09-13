@@ -51,7 +51,7 @@ const knownRecipeTitles = standardRecipes.map(r => r.title).join(', ');
 
 const recipePrompt = ai.definePrompt({
   name: 'suggestRecipePrompt',
-  model: 'googleai/gemini-1.5-flash-latest',
+  model: 'googleai/gemini-1.5-flash',
   input: {schema: SuggestRecipeInputSchema},
   output: {schema: SuggestRecipeOutputSchema.omit({ image: true })},
   prompt: `You are an expert chef who excels at creating new and exciting recipes from a limited set of ingredients. A user will provide you with ingredients they have, and you must invent a new, delicious recipe.

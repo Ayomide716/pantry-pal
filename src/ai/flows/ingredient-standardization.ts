@@ -36,7 +36,7 @@ export async function standardizeIngredient(
 
 const prompt = ai.definePrompt({
   name: 'ingredientStandardizationPrompt',
-  model: 'googleai/gemini-1.5-flash-latest',
+  model: 'googleai/gemini-1.5-flash',
   input: {
     schema: IngredientStandardizationInputSchema,
   },
