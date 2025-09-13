@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { generateMealPlan } from '@/ai/flows/generate-meal-plan';
+import { generateMealPlan, type GenerateMealPlanOutput } from '@/ai/flows/generate-meal-plan';
 import { usePantry } from '@/hooks/use-pantry';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -14,27 +14,36 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Sparkles } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const formSchema = z.object({
   preferences: z.string().optional(),
 });
 
 function MealPlanSkeleton() {
-  return (
-    <div className="space-y-4">
-      <Skeleton className="h-8 w-1/3" />
-      <Skeleton className="h-24 w-full" />
-      <Skeleton className="h-24 w-full" />
-      <Skeleton className="h-24 w-full" />
-    </div>
-  );
-}
+    return (
+      <div className="space-y-6">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Card key={i}>
+            <CardHeader>
+              <Skeleton className="h-8 w-1/3" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
 
 export default function MealPlanPage() {
   const { ingredients, isPantryLoaded } = usePantry();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [mealPlan, setMealPlan] = useState<string | null>(null);
+  const [mealPlan, setMealPlan] = useState<GenerateMealPlanOutput['mealPlan'] | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -138,11 +147,29 @@ export default function MealPlanPage() {
               <CardTitle>Your Personalized Meal Plan</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="prose prose-sm md:prose-base prose-headings:font-headline max-w-none text-foreground prose-strong:text-foreground">
-                {mealPlan.split('\n').map((paragraph, index) => (
-                  <p key={index}>{paragraph}</p>
+              <Accordion type="single" collapsible className="w-full space-y-2">
+                {mealPlan.map((dailyPlan) => (
+                  <AccordionItem value={dailyPlan.day} key={dailyPlan.day} className="border rounded-lg px-4 bg-card">
+                    <AccordionTrigger className="font-headline text-xl text-foreground hover:no-underline">
+                      {dailyPlan.day}
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-4 pt-2">
+                        {[
+                          { title: 'Breakfast', meal: dailyPlan.breakfast },
+                          { title: 'Lunch', meal: dailyPlan.lunch },
+                          { title: 'Dinner', meal: dailyPlan.dinner },
+                        ].map(({ title, meal }) => (
+                          <div key={title} className="p-3 bg-background rounded-md">
+                            <h4 className="font-semibold text-primary">{title}: {meal.name}</h4>
+                            <p className="text-sm text-muted-foreground mt-1">{meal.recipe}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
                 ))}
-              </div>
+              </Accordion>
             </CardContent>
           </Card>
         )}

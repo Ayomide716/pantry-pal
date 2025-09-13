@@ -1,5 +1,6 @@
 import IngredientInput from '@/components/ingredient-input';
 import RecipeList from '@/components/recipe-list';
+import SuggestedRecipe from '@/components/suggested-recipe';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { UtensilsCrossed } from 'lucide-react';
 
@@ -17,7 +18,7 @@ export default function Home() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         <div className="lg:col-span-4 xl:col-span-3">
-          <div className="sticky top-24">
+          <div className="sticky top-24 space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -29,6 +30,7 @@ export default function Home() {
                 <IngredientInput />
               </CardContent>
             </Card>
+            <SuggestedRecipe />
           </div>
         </div>
         <div className="lg:col-span-8 xl:col-span-9">

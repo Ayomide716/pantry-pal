@@ -1,5 +1,3 @@
-// This file is machine-generated - edit at your own risk.
-
 'use server';
 
 /**
@@ -25,14 +23,26 @@ const GenerateMealPlanInputSchema = z.object({
 });
 export type GenerateMealPlanInput = z.infer<typeof GenerateMealPlanInputSchema>;
 
+const MealSchema = z.object({
+  name: z.string().describe('The name of the meal.'),
+  recipe: z.string().describe('A short recipe or preparation steps.'),
+});
+
+const DailyPlanSchema = z.object({
+  day: z.string().describe('The day of the week (e.g., Monday).'),
+  breakfast: MealSchema,
+  lunch: MealSchema,
+  dinner: MealSchema,
+});
+
 const GenerateMealPlanOutputSchema = z.object({
   mealPlan: z
-    .string()
-    .describe(
-      'A detailed weekly meal plan, including recipes for breakfast, lunch, and dinner, considering the available ingredients and dietary preferences.'
-    ),
+    .array(DailyPlanSchema)
+    .describe('A detailed 7-day weekly meal plan.'),
 });
-export type GenerateMealPlanOutput = z.infer<typeof GenerateMealPlanOutputSchema>;
+export type GenerateMealPlanOutput = z.infer<
+  typeof GenerateMealPlanOutputSchema
+>;
 
 export async function generateMealPlan(
   input: GenerateMealPlanInput
@@ -44,12 +54,21 @@ const prompt = ai.definePrompt({
   name: 'generateMealPlanPrompt',
   input: {schema: GenerateMealPlanInputSchema},
   output: {schema: GenerateMealPlanOutputSchema},
-  prompt: `You are a meal planning assistant. Generate a weekly meal plan based on the ingredients available and dietary preferences provided by the user. 
+  prompt: `You are a master chef and meal planning assistant. Your task is to generate a complete 7-day meal plan based on the ingredients a user has available and their stated dietary preferences.
 
-Ingredients: {{{ingredients}}}
+Your response MUST be a valid JSON object that conforms to the output schema.
+
+You need to create a plan for Breakfast, Lunch, and Dinner for each day of the week, from Monday to Sunday.
+
+- Use the provided ingredients creatively.
+- Supplement with common pantry staples if necessary, but prioritize the user's ingredients.
+- Adhere strictly to the dietary preferences.
+- For each meal, provide a simple name and a brief recipe or preparation steps.
+
+Available Ingredients: {{{ingredients}}}
 Dietary Preferences: {{{dietaryPreferences}}}
 
-Provide a detailed meal plan including recipes for breakfast, lunch, and dinner for each day of the week. Consider the available ingredients and dietary preferences when creating the meal plan.
+Generate the 7-day meal plan now.
 `,
 });
 
