@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore, useCallback, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 const INGREDIENTS_KEY = 'pantry-pal-ingredients';
 const FAVORITES_KEY = 'pantry-pal-favorites';
@@ -15,23 +15,6 @@ let pantryState: PantryState = {
   favorites: [],
 };
 
-// This function will only be called on the client
-const loadInitialState = () => {
-    try {
-        const storedIngredients = localStorage.getItem(INGREDIENTS_KEY);
-        const storedFavorites = localStorage.getItem(FAVORITES_KEY);
-        pantryState = {
-            ingredients: storedIngredients ? JSON.parse(storedIngredients) : [],
-            favorites: storedFavorites ? JSON.parse(storedFavorites) : [],
-        };
-    } catch (e) {
-        console.error("Failed to load pantry from localStorage", e);
-        pantryState = { ingredients: [], favorites: [] };
-    }
-    emitChange();
-}
-
-
 const listeners = new Set<() => void>();
 
 function emitChange() {
@@ -40,17 +23,34 @@ function emitChange() {
   }
 }
 
+const loadInitialState = () => {
+    if (typeof window === 'undefined') {
+        return;
+    }
+    try {
+        const storedIngredients = localStorage.getItem(INGREDIENTS_KEY);
+        const storedFavorites = localStorage.getItem(FAVORITES_KEY);
+        const newState: PantryState = {
+            ingredients: storedIngredients ? JSON.parse(storedIngredients) : [],
+            favorites: storedFavorites ? JSON.parse(storedFavorites) : [],
+        };
+        // Only update and emit if the state has actually changed
+        if (JSON.stringify(newState) !== JSON.stringify(pantryState)) {
+          pantryState = newState;
+          emitChange();
+        }
+    } catch (e) {
+        console.error("Failed to load pantry from localStorage", e);
+        pantryState = { ingredients: [], favorites: [] };
+        emitChange();
+    }
+};
+
+
 function subscribe(listener: () => void) {
   listeners.add(listener);
   return () => listeners.delete(listener);
 }
-
-const getSnapshot = () => pantryState;
-
-const serverSnapshot: PantryState = {
-  ingredients: [],
-  favorites: [],
-};
 
 // --- Store Actions ---
 
@@ -96,30 +96,34 @@ function toggleFavorite(recipeId: number) {
 // --- Hook ---
 
 export const usePantry = () => {
-    const state = useSyncExternalStore(subscribe, getSnapshot, () => serverSnapshot);
-    
-    // This effect runs once on the client after hydration to load the initial state
-    // from localStorage. This is the key to avoiding hydration errors.
-    useEffect(() => {
-        loadInitialState();
-    }, []);
+  const [state, setState] = useState(pantryState);
+  const [isPantryLoaded, setIsPantryLoaded] = useState(false);
 
-    const isPantryLoaded = typeof window !== 'undefined';
+  useEffect(() => {
+    // This effect runs once on the client after hydration
+    loadInitialState();
+    setState(pantryState);
+    setIsPantryLoaded(true);
 
-    const handleStorageChange = useCallback((event: StorageEvent) => {
+    const handleStorageChange = (event: StorageEvent) => {
         if (event.key === INGREDIENTS_KEY || event.key === FAVORITES_KEY) {
             loadInitialState();
         }
-    }, []);
+    };
+    
+    // Subscribe to our internal state changes
+    const unsubscribe = subscribe(() => {
+      setState(pantryState);
+    });
 
-    useEffect(() => {
-        window.addEventListener('storage', handleStorageChange);
-        
-        return () => {
-            window.removeEventListener('storage', handleStorageChange);
-        }
-    }, [handleStorageChange]);
-
+    // Subscribe to cross-tab storage changes
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      unsubscribe();
+      window.removeEventListener('storage', handleStorageChange);
+    }
+  }, []);
 
   return {
     ingredients: state.ingredients,
@@ -128,6 +132,6 @@ export const usePantry = () => {
     clearIngredients,
     favorites: state.favorites,
     toggleFavorite,
-    isPantryLoaded: isPantryLoaded,
+    isPantryLoaded,
   };
 };

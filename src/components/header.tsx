@@ -20,26 +20,13 @@ const NavLink = ({ href, children, onClick }: { href: string, children: React.Re
     </Button>
   );
 
+  const navItems = [
+    { href: '/favorites', icon: BookHeart, label: 'Favorites' },
+    { href: '/meal-plan', icon: ClipboardList, label: 'Meal Plan' },
+  ]
+
 export default function Header() {
   const { favorites } = usePantry();
-
-  const navItems = (inSheet: boolean = false) => (
-    <>
-      <NavLink href="/favorites">
-        <BookHeart className="mr-2 h-4 w-4" />
-        Favorites
-        {favorites.length > 0 && (
-          <Badge variant="secondary" className="ml-2 bg-accent text-accent-foreground">
-            {favorites.length}
-          </Badge>
-        )}
-      </NavLink>
-      <NavLink href="/meal-plan">
-        <ClipboardList className="mr-2 h-4 w-4" />
-        Meal Plan
-      </NavLink>
-    </>
-  );
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur-sm">
@@ -48,7 +35,17 @@ export default function Header() {
           <PantryPalLogo />
         </Link>
         <nav className="hidden items-center space-x-2 md:flex">
-          {navItems()}
+          {navItems.map((item) => (
+            <NavLink key={item.href} href={item.href}>
+              <item.icon className="mr-2 h-4 w-4" />
+              {item.label}
+              {item.label === 'Favorites' && favorites.length > 0 && (
+                <Badge variant="secondary" className="ml-2 bg-accent text-accent-foreground">
+                  {favorites.length}
+                </Badge>
+              )}
+            </NavLink>
+          ))}
         </nav>
         <div className="md:hidden">
           <Sheet>
@@ -65,9 +62,19 @@ export default function Header() {
                         <PantryPalLogo />
                     </Link>
                 </SheetClose>
-                <SheetClose asChild>
-                  {navItems(true)}
-                </SheetClose>
+                {navItems.map((item) => (
+                  <SheetClose asChild key={item.href}>
+                    <NavLink href={item.href}>
+                      <item.icon className="mr-2 h-4 w-4" />
+                      {item.label}
+                      {item.label === 'Favorites' && favorites.length > 0 && (
+                         <Badge variant="secondary" className="ml-2 bg-accent text-accent-foreground">
+                            {favorites.length}
+                        </Badge>
+                      )}
+                    </NavLink>
+                  </SheetClose>
+                ))}
               </div>
             </SheetContent>
           </Sheet>
