@@ -23,7 +23,7 @@ const NavLink = ({ href, children, onClick }: { href: string, children: React.Re
 export default function Header() {
   const { favorites } = usePantry();
 
-  const navItems = (
+  const navItems = (inSheet: boolean = false) => (
     <>
       <NavLink href="/favorites">
         <BookHeart className="mr-2 h-4 w-4" />
@@ -48,7 +48,7 @@ export default function Header() {
           <PantryPalLogo />
         </Link>
         <nav className="hidden items-center space-x-2 md:flex">
-          {navItems}
+          {navItems()}
         </nav>
         <div className="md:hidden">
           <Sheet>
@@ -65,8 +65,9 @@ export default function Header() {
                         <PantryPalLogo />
                     </Link>
                 </SheetClose>
-                <SheetClose asChild><NavLink href="/favorites">Favorites</NavLink></SheetClose>
-                <SheetClose asChild><NavLink href="/meal-plan">Meal Plan</NavLink></SheetClose>
+                <SheetClose asChild>
+                  {navItems(true)}
+                </SheetClose>
               </div>
             </SheetContent>
           </Sheet>
