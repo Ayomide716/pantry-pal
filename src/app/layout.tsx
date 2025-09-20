@@ -4,10 +4,6 @@ import { Toaster } from '@/components/ui/toaster';
 import Header from '@/components/header';
 import { Alegreya } from 'next/font/google';
 
-import '@/ai/flows/ingredient-standardization';
-import '@/ai/flows/generate-meal-plan';
-import '@/ai/flows/suggest-recipe';
-
 const alegreya = Alegreya({
   subsets: ['latin'],
   display: 'swap',
