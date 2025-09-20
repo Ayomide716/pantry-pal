@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { BookHeart, ClipboardList, Menu } from 'lucide-react';
+import { BookHeart, ClipboardList, Menu, Download } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/sheet';
 import PantryPalLogo from './pantry-pal-logo';
 import { usePantry } from '@/hooks/use-pantry';
+import { usePwaInstall } from '@/hooks/use-pwa-install';
 import { Badge } from './ui/badge';
 
 const NavLink = ({ href, children, onClick }: { href: string, children: React.ReactNode, onClick?: () => void }) => (
@@ -27,6 +28,11 @@ const NavLink = ({ href, children, onClick }: { href: string, children: React.Re
 
 export default function Header() {
   const { favorites } = usePantry();
+  const { canInstall, promptInstall } = usePwaInstall();
+
+  const handleInstallClick = () => {
+    promptInstall();
+  };
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur-sm">
@@ -35,6 +41,12 @@ export default function Header() {
           <PantryPalLogo />
         </Link>
         <nav className="hidden items-center space-x-2 md:flex">
+          {canInstall && (
+            <Button onClick={handleInstallClick}>
+              <Download className="mr-2 h-4 w-4" />
+              Install App
+            </Button>
+          )}
           {navItems.map((item) => (
             <NavLink key={item.href} href={item.href}>
               <item.icon className="mr-2 h-4 w-4" />
@@ -62,6 +74,14 @@ export default function Header() {
                         <PantryPalLogo />
                     </Link>
                 </SheetClose>
+                 {canInstall && (
+                  <SheetClose asChild>
+                    <Button onClick={handleInstallClick} className="w-full justify-start">
+                      <Download className="mr-2 h-4 w-4" />
+                      Install App
+                    </Button>
+                  </SheetClose>
+                )}
                 {navItems.map((item) => (
                   <SheetClose asChild key={item.href}>
                     <NavLink href={item.href}>
