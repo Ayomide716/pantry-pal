@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -54,12 +55,13 @@ const recipePrompt = ai.definePrompt({
   model: 'googleai/gemini-1.5-flash',
   input: {schema: SuggestRecipeInputSchema},
   output: {schema: SuggestRecipeOutputSchema.omit({ image: true })},
-  prompt: `You are an expert chef who excels at creating new and exciting recipes from a limited set of ingredients. A user will provide you with ingredients they have, and you must invent a new, delicious recipe.
+  prompt: `You are an expert chef who excels at creating new and exciting recipes. A user will provide you with a list of ingredients they have. You must invent a new, delicious recipe using ONLY the ingredients from the user's list.
 
 Your response MUST be a valid JSON object that conforms to the output schema.
 
-- The recipe should primarily use the ingredients provided by the user.
-- You can assume the user has common pantry staples like oil, salt, pepper, and basic spices. You can include these in the ingredient list.
+**Strict Rules:**
+- The recipe's ingredient list MUST ONLY contain ingredients from the user's provided list.
+- You may assume the user has water, oil, salt, and pepper, and you can include those in the ingredients list for the recipe if needed, but no other staples.
 - To ensure the suggestion is unique, the recipe should NOT be one of the following standard dishes: ${knownRecipeTitles}.
 - Make the recipe sound appealing and the instructions clear and easy to follow.
 
