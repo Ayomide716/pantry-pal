@@ -17,6 +17,7 @@ const alegreya = Alegreya({
 export const metadata: Metadata = {
   title: 'PantryPal',
   description: 'A helpful recipe discovery app that suggests dishes based on user-inputted ingredients.',
+  manifest: '/manifest.json',
   icons: [{ rel: 'icon', url: '/favicon.ico' }],
 };
 
