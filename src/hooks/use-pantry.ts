@@ -41,17 +41,17 @@ export const usePantry = () => {
     }
   }, []);
 
-  const updateState = (newState: Partial<PantryState>) => {
+  const updateStateAndStorage = useCallback((newState: Partial<PantryState>) => {
     setPantryState(prevState => {
       const updatedState = { ...prevState, ...newState };
       try {
-        if (newState.ingredients) {
+        if (newState.ingredients !== undefined) {
           localStorage.setItem(INGREDIENTS_KEY, JSON.stringify(updatedState.ingredients));
         }
-        if (newState.favorites) {
+        if (newState.favorites !== undefined) {
           localStorage.setItem(FAVORITES_KEY, JSON.stringify(updatedState.favorites));
         }
-        if (newState.generatedFavorites) {
+        if (newState.generatedFavorites !== undefined) {
           localStorage.setItem(GENERATED_FAVORITES_KEY, JSON.stringify(updatedState.generatedFavorites));
         }
       } catch (error) {
@@ -59,7 +59,7 @@ export const usePantry = () => {
       }
       return updatedState;
     });
-  };
+  }, []);
 
   const addIngredient = useCallback((ingredient: string) => {
     const lowerCaseIngredient = ingredient.toLowerCase();
@@ -68,35 +68,35 @@ export const usePantry = () => {
         return prevState;
       }
       const newIngredients = [...prevState.ingredients, lowerCaseIngredient];
-      updateState({ ingredients: newIngredients });
+      updateStateAndStorage({ ingredients: newIngredients });
       return { ...prevState, ingredients: newIngredients };
     });
-  }, []);
+  }, [updateStateAndStorage]);
 
   const removeIngredient = useCallback((ingredient: string) => {
     const newIngredients = pantryState.ingredients.filter(i => i !== ingredient);
-    updateState({ ingredients: newIngredients });
-  }, [pantryState.ingredients]);
+    updateStateAndStorage({ ingredients: newIngredients });
+  }, [pantryState.ingredients, updateStateAndStorage]);
 
   const clearIngredients = useCallback(() => {
-    updateState({ ingredients: [] });
-  }, []);
+    updateStateAndStorage({ ingredients: [] });
+  }, [updateStateAndStorage]);
 
   const toggleFavorite = useCallback((recipeId: number) => {
     const isFavorite = pantryState.favorites.includes(recipeId);
     const newFavorites = isFavorite
       ? pantryState.favorites.filter(id => id !== recipeId)
       : [...pantryState.favorites, recipeId];
-    updateState({ favorites: newFavorites });
-  }, [pantryState.favorites]);
+    updateStateAndStorage({ favorites: newFavorites });
+  }, [pantryState.favorites, updateStateAndStorage]);
 
   const toggleGeneratedFavorite = useCallback((recipe: GeneratedRecipe) => {
     const isFavorite = pantryState.generatedFavorites.some(r => r.id === recipe.id);
     const newFavorites = isFavorite
       ? pantryState.generatedFavorites.filter(r => r.id !== recipe.id)
       : [...pantryState.generatedFavorites, recipe];
-    updateState({ generatedFavorites: newFavorites });
-  }, [pantryState.generatedFavorites]);
+    updateStateAndStorage({ generatedFavorites: newFavorites });
+  }, [pantryState.generatedFavorites, updateStateAndStorage]);
 
   return {
     ...pantryState,

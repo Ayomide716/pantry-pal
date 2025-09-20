@@ -27,12 +27,14 @@ const NavLink = ({ href, children, onClick }: { href: string, children: React.Re
   ]
 
 export default function Header() {
-  const { favorites } = usePantry();
+  const { favorites, generatedFavorites, isPantryLoaded } = usePantry();
   const { canInstall, promptInstall } = usePwaInstall();
 
   const handleInstallClick = () => {
     promptInstall();
   };
+  
+  const totalFavorites = (favorites?.length || 0) + (generatedFavorites?.length || 0);
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur-sm">
@@ -51,9 +53,9 @@ export default function Header() {
             <NavLink key={item.href} href={item.href}>
               <item.icon className="mr-2 h-4 w-4" />
               {item.label}
-              {item.label === 'Favorites' && favorites.length > 0 && (
+              {item.label === 'Favorites' && isPantryLoaded && totalFavorites > 0 && (
                 <Badge variant="secondary" className="ml-2 bg-accent text-accent-foreground">
-                  {favorites.length}
+                  {totalFavorites}
                 </Badge>
               )}
             </NavLink>
@@ -87,9 +89,9 @@ export default function Header() {
                     <NavLink href={item.href}>
                       <item.icon className="mr-2 h-4 w-4" />
                       {item.label}
-                      {item.label === 'Favorites' && favorites.length > 0 && (
+                      {item.label === 'Favorites' && isPantryLoaded && totalFavorites > 0 && (
                          <Badge variant="secondary" className="ml-2 bg-accent text-accent-foreground">
-                            {favorites.length}
+                            {totalFavorites}
                         </Badge>
                       )}
                     </NavLink>
