@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -41,62 +42,63 @@ export const usePantry = () => {
     }
   }, []);
 
-  const updateStateAndStorage = useCallback((newState: Partial<PantryState>) => {
+  const updateStateAndStorage = useCallback((updater: (prevState: PantryState) => PantryState) => {
     setPantryState(prevState => {
-      const updatedState = { ...prevState, ...newState };
+      const newState = updater(prevState);
       try {
-        if (newState.ingredients !== undefined) {
-          localStorage.setItem(INGREDIENTS_KEY, JSON.stringify(updatedState.ingredients));
-        }
-        if (newState.favorites !== undefined) {
-          localStorage.setItem(FAVORITES_KEY, JSON.stringify(updatedState.favorites));
-        }
-        if (newState.generatedFavorites !== undefined) {
-          localStorage.setItem(GENERATED_FAVORITES_KEY, JSON.stringify(updatedState.generatedFavorites));
-        }
+        localStorage.setItem(INGREDIENTS_KEY, JSON.stringify(newState.ingredients));
+        localStorage.setItem(FAVORITES_KEY, JSON.stringify(newState.favorites));
+        localStorage.setItem(GENERATED_FAVORITES_KEY, JSON.stringify(newState.generatedFavorites));
       } catch (error) {
         console.error("Failed to save pantry to localStorage", error);
       }
-      return updatedState;
+      return newState;
     });
   }, []);
 
   const addIngredient = useCallback((ingredient: string) => {
     const lowerCaseIngredient = ingredient.toLowerCase();
-    setPantryState(prevState => {
+    updateStateAndStorage(prevState => {
       if (prevState.ingredients.includes(lowerCaseIngredient)) {
         return prevState;
       }
-      const newIngredients = [...prevState.ingredients, lowerCaseIngredient];
-      updateStateAndStorage({ ingredients: newIngredients });
-      return { ...prevState, ingredients: newIngredients };
+      return { ...prevState, ingredients: [...prevState.ingredients, lowerCaseIngredient] };
     });
   }, [updateStateAndStorage]);
 
   const removeIngredient = useCallback((ingredient: string) => {
-    const newIngredients = pantryState.ingredients.filter(i => i !== ingredient);
-    updateStateAndStorage({ ingredients: newIngredients });
-  }, [pantryState.ingredients, updateStateAndStorage]);
+    updateStateAndStorage(prevState => ({
+        ...prevState,
+        ingredients: prevState.ingredients.filter(i => i !== ingredient),
+    }));
+  }, [updateStateAndStorage]);
 
   const clearIngredients = useCallback(() => {
-    updateStateAndStorage({ ingredients: [] });
+    updateStateAndStorage(prevState => ({
+        ...prevState,
+        ingredients: [],
+    }));
   }, [updateStateAndStorage]);
 
   const toggleFavorite = useCallback((recipeId: number) => {
-    const isFavorite = pantryState.favorites.includes(recipeId);
-    const newFavorites = isFavorite
-      ? pantryState.favorites.filter(id => id !== recipeId)
-      : [...pantryState.favorites, recipeId];
-    updateStateAndStorage({ favorites: newFavorites });
-  }, [pantryState.favorites, updateStateAndStorage]);
+    updateStateAndStorage(prevState => {
+      const isFavorite = prevState.favorites.includes(recipeId);
+      const newFavorites = isFavorite
+        ? prevState.favorites.filter(id => id !== recipeId)
+        : [...prevState.favorites, recipeId];
+      return { ...prevState, favorites: newFavorites };
+    });
+  }, [updateStateAndStorage]);
 
   const toggleGeneratedFavorite = useCallback((recipe: GeneratedRecipe) => {
-    const isFavorite = pantryState.generatedFavorites.some(r => r.id === recipe.id);
-    const newFavorites = isFavorite
-      ? pantryState.generatedFavorites.filter(r => r.id !== recipe.id)
-      : [...pantryState.generatedFavorites, recipe];
-    updateStateAndStorage({ generatedFavorites: newFavorites });
-  }, [pantryState.generatedFavorites, updateStateAndStorage]);
+     updateStateAndStorage(prevState => {
+        const isFavorite = prevState.generatedFavorites.some(r => r.id === recipe.id);
+        const newFavorites = isFavorite
+          ? prevState.generatedFavorites.filter(r => r.id !== recipe.id)
+          : [...prevState.generatedFavorites, recipe];
+        return { ...prevState, generatedFavorites: newFavorites };
+     });
+  }, [updateStateAndStorage]);
 
   return {
     ...pantryState,
